@@ -1,10 +1,12 @@
 import express from "express";
-import { UserModel } from "./Models/Models";
+import { ContentModel, LinkModel, UserModel } from "./Models/Models";
 import jwt from "jsonwebtoken";
-import { JWT_secret } from "./config";
+import { JWT_secret, GenerateHash } from "./config";
+import userMiddleware from "./userMiddleware";
 const app = express();
 
 app.use(express.json());
+
 
 app.post("/signup", async (req, res) => {
     const username = req.body.username;
@@ -49,6 +51,107 @@ app.post("/signin", async (req, res) => {
     else {
         res.status(403).json({
             message : "Username/Password did not match"
+        })
+    }
+})
+
+app.get("/api/brain/:shareLink", async (req, res) => {
+    const hash = req.params.shareLink;
+
+    const link = await LinkModel.findOne({
+        hash
+    });
+
+    if (!link) {
+        res.status(411).json({
+            message: "Sorry incorrect input"
+        })
+        return;
+    }
+
+    const content = await ContentModel.find({
+        userId: link.userId
+    })
+
+    res.json({
+        content
+    })
+
+})
+
+ app.use(userMiddleware)
+
+app.post("/api/content", async (req, res) => {
+    
+    const link = req.body.link;
+    const type = req.body.type;
+    const title = req.body.title;
+    
+    const userId = req.userId
+    
+    await ContentModel.create({
+        title,
+        link,
+        type,
+        userId
+    })
+})
+
+app.get("/api/content", async (req, res) => {
+     
+    const userId = req.userId;
+    const content = await ContentModel.find({
+        userId
+    })
+    res.json({
+        content
+    })
+})
+
+app.delete("/api/content", async (req, res) => {
+    const contentId = req.body.contentId;
+    
+    const userId = req.userId;
+    await ContentModel.findOneAndDelete({
+        contentId,
+        userId
+    })
+
+    res.json({
+        message: "Deleted"
+    })
+})
+
+app.post("/api/brain/share", async (req, res) => {
+    
+    const share = req.body.share;
+     
+    const userId = req.userId;
+    if(share) {
+        const link = await LinkModel.findOne({
+            userId
+        })
+
+        if(link) {
+            res.json({
+                hash : link
+            })
+        }
+        else {
+            const hash = GenerateHash(20)
+            await LinkModel.create({
+                userId,
+                hash
+            })
+        }
+
+    }
+    else {
+        await LinkModel.deleteOne({
+            userId
+        })
+        res.json({
+            message: "Sharing off"
         })
     }
 })
