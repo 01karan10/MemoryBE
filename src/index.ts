@@ -3,10 +3,11 @@ import { ContentModel, LinkModel, UserModel } from "./Models/Models";
 import jwt from "jsonwebtoken";
 import { JWT_secret, GenerateHash } from "./config";
 import userMiddleware from "./userMiddleware";
+import cors from "cors";
 const app = express();
 
 app.use(express.json());
-
+app.use(cors());
 
 app.post("/signup", async (req, res) => {
     const username = req.body.username;
@@ -22,9 +23,10 @@ app.post("/signup", async (req, res) => {
         })
     }
     catch(e) {
-        res.status(411).json({
-            message : "Username is already taken"
-        })
+            res.status(409).json({
+            message: "Username is already taken"
+        });
+
     }
 })
 
@@ -79,22 +81,24 @@ app.get("/api/brain/:shareLink", async (req, res) => {
 
 })
 
- app.use(userMiddleware)
+app.use(userMiddleware)
 
 app.post("/api/content", async (req, res) => {
     
-    const link = req.body.link;
-    const type = req.body.type;
-    const title = req.body.title;
-    
-    const userId = req.userId
-    
-    await ContentModel.create({
-        title,
-        link,
-        type,
-        userId
-    })
+   try {
+    const { link, type, title } = req.body;
+    const userId = req.userId;
+    const content = await ContentModel.create({
+      title,
+      link,
+      type,
+      userId
+    });
+
+    res.status(201).json({ message: "Content created", content });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error });
+  }
 })
 
 app.get("/api/content", async (req, res) => {

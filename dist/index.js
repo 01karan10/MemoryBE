@@ -17,8 +17,10 @@ const Models_1 = require("./Models/Models");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const config_1 = require("./config");
 const userMiddleware_1 = __importDefault(require("./userMiddleware"));
+const cors_1 = __importDefault(require("cors"));
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
+app.use((0, cors_1.default)());
 app.post("/signup", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const username = req.body.username;
     const password = req.body.password;
@@ -32,7 +34,7 @@ app.post("/signup", (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         });
     }
     catch (e) {
-        res.status(411).json({
+        res.status(409).json({
             message: "Username is already taken"
         });
     }
@@ -78,16 +80,20 @@ app.get("/api/brain/:shareLink", (req, res) => __awaiter(void 0, void 0, void 0,
 }));
 app.use(userMiddleware_1.default);
 app.post("/api/content", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const link = req.body.link;
-    const type = req.body.type;
-    const title = req.body.title;
-    const userId = req.userId;
-    yield Models_1.ContentModel.create({
-        title,
-        link,
-        type,
-        userId
-    });
+    try {
+        const { link, type, title } = req.body;
+        const userId = req.userId;
+        const content = yield Models_1.ContentModel.create({
+            title,
+            link,
+            type,
+            userId
+        });
+        res.status(201).json({ message: "Content created", content });
+    }
+    catch (error) {
+        res.status(500).json({ message: "Server error", error });
+    }
 }));
 app.get("/api/content", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const userId = req.userId;
