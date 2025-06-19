@@ -97,18 +97,49 @@ app.post("/api/content", (req, res) => __awaiter(void 0, void 0, void 0, functio
 }));
 app.get("/api/content", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const userId = req.userId;
-    const content = yield Models_1.ContentModel.find({
-        userId
-    });
-    res.json({
-        content
-    });
+    try {
+        const content = yield Models_1.ContentModel.find({
+            userId
+        });
+        res.status(201).json({ content });
+    }
+    catch (error) {
+        res.status(500).json({ message: "Server error", error });
+    }
+}));
+app.get("/api/content/youtube", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const type = "youtube";
+    const userId = req.userId;
+    try {
+        const content = yield Models_1.ContentModel.find({
+            userId,
+            type
+        });
+        res.status(201).json({ content });
+    }
+    catch (error) {
+        res.status(500).json({ message: "Server error", error });
+    }
+}));
+app.get("/api/content/twitter", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const type = "twitter";
+    const userId = req.userId;
+    try {
+        const content = yield Models_1.ContentModel.find({
+            userId,
+            type
+        });
+        res.status(201).json({ content });
+    }
+    catch (error) {
+        res.status(500).json({ message: "Server error", error });
+    }
 }));
 app.delete("/api/content", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const contentId = req.body.contentId;
     const userId = req.userId;
     yield Models_1.ContentModel.findOneAndDelete({
-        contentId,
+        _id: contentId,
         userId
     });
     res.json({

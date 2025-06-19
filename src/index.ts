@@ -104,26 +104,60 @@ app.post("/api/content", async (req, res) => {
 app.get("/api/content", async (req, res) => {
      
     const userId = req.userId;
-    const content = await ContentModel.find({
-        userId
-    })
-    res.json({
-        content
-    })
+    try {
+        const content = await ContentModel.find({
+            userId
+        })
+        res.status(201).json({ content });
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error });
+    }
+})
+
+app.get("/api/content/youtube", async (req, res) => {
+    const type = "youtube"
+    const userId = req.userId;
+    try {
+        const content = await ContentModel.find({
+            userId,
+            type
+        })
+        res.status(201).json({ content });
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error });
+    }
+})
+
+app.get("/api/content/twitter", async (req, res) => {
+    const type = "twitter"
+    const userId = req.userId;
+    try {
+        const content = await ContentModel.find({
+            userId,
+            type
+        })
+        res.status(201).json({ content });
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error });
+    }
 })
 
 app.delete("/api/content", async (req, res) => {
     const contentId = req.body.contentId;
     
     const userId = req.userId;
-    await ContentModel.findOneAndDelete({
-        contentId,
-        userId
-    })
+    try {
+        await ContentModel.findOneAndDelete({
+            _id : contentId,
+            userId
+        })
 
-    res.json({
-        message: "Deleted"
-    })
+        res.status(200).json({
+            message: "Deleted"
+        })
+    } catch (error) {
+        res.status(500).json({error})
+    }
 })
 
 app.post("/api/brain/share", async (req, res) => {
